@@ -432,7 +432,7 @@ with tabs[1]:
 # ------------------------------
 # Barangay flood probability (fixed)
 # ------------------------------
-if 'Barangay' in .columns:
+if 'Barangay' in df.columns:
     # create flood_occurred column if not exists
     if 'flood_occurred' not in df.columns:
         df['flood_occurred'] = (df['Water Level'].fillna(0) > 0).astype(int)
