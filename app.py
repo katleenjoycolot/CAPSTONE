@@ -403,19 +403,7 @@ with tabs[1]:
                 - **Probability = Flood occurrences / Total records in that month**  
                 Months with higher bars indicate higher flood risk periods.  
                 """)
-                 # 2. Most Affected Barangays 
-    plt.figure(figsize=(12, 5))
-    if not df[area_col].isnull().all():
-        overall_most_affected = df[df['is_flood']].groupby(area_col).size().sort_values(ascending=False).head(10)
-        overall_most_affected.plot(kind='bar')
-        plt.title(f"Top 10 Overall Affected Areas ({area_col}) by Flood Count")
-        plt.xlabel(area_col); plt.ylabel("Total Flood Count")
-        plt.xticks(rotation=45, ha='right')
-    else:
-        plt.text(0.5, 0.5, "No Area Data or Flood Events Found", ha='center')
-    plt.tight_layout()
-    plt.savefig(os.path.join(OUTDIR, "most_affected_areas_overall.png"))
-    plt.close()
+        
         # ------------------------------
         # Municipal flood probabilities
         # ------------------------------
