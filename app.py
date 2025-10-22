@@ -430,84 +430,74 @@ with tabs[1]:
                 guiding local preparedness and response planning.
                 """)
 # ------------------------------
-# Upload Section (Top of your code)
+# Barangay flood probability (fixed)
 # ------------------------------
-uploaded_file = st.file_uploader("Upload your dataset", type=["csv", "xlsx"])
+if 'Barangay' in df.columns:
+    # create flood_occurred column if not exists
+    if 'flood_occurred' not in df.columns:
+        df['flood_occurred'] = (df['Water Level'].fillna(0) > 0).astype(int)
 
-if uploaded_file is not None:
-    df = pd.read_csv(uploaded_file)
+    st.subheader("Barangay Flood Probability")
 
-    # Show uploaded dataset (optional)
-    st.write("✅ Dataset loaded successfully!")
-    st.dataframe(df)
+    # barangay mapping
+    barangay_map = {
+        1: 'Bunawan Brook', 2: 'Consuelo', 3: 'Imelda', 4: 'Libertad',
+        5: 'Mambalili', 6: 'Nueva Era', 7: 'Poblacion', 8: 'San Andres',
+        9: 'San Marcos', 10: 'San Teodoro',
+    }
 
-    # ------------------------------
-    # Barangay flood probability (fixed)
-    # ------------------------------
-    if 'Barangay' in df.columns:
-        # create flood_occurred column if not exists
-        if 'flood_occurred' not in df.columns:
-            df['flood_occurred'] = (df['Water Level'].fillna(0) > 0).astype(int)
+    # clean and convert barangay formats
+    def clean_barangay(val):
+        try:
+            val_str = str(val).strip().lower()
+            # numeric (1–12 or '01')
+            if val_str.isdigit():
+                num = int(val_str)
+                return barangay_map.get(num, np.nan)
+            # match barangay name (partial or full)
+            for num, name in barangay_map.items():
+                if val_str.startswith(name[:3].lower()):
+                    return name
+            return np.nan
+        except:
+            return np.nan
 
-        st.subheader("Barangay Flood Probability")
+    # apply cleaning
+    df['Barangay_clean'] = df['Barangay'].apply(clean_barangay)
+    df = df.dropna(subset=['Barangay_clean'])
 
-        barangay_map = {
-            1: 'Bunawan Brook', 2: 'Consuelo', 3: 'Imelda', 4: 'Libertad',
-            5: 'Mambalili', 6: 'Nueva Era', 7: 'Poblacion', 8: 'San Andres',
-            9: 'San Marcos', 10: 'San Teodoro',
-        }
+    # compute barangay stats
+    m_stats = df.groupby('Barangay_clean')['flood_occurred'].agg(['sum', 'count']).reset_index()
+    m_stats['probability'] = (m_stats['sum'] / m_stats['count']).round(3)
 
-        def clean_barangay(val):
-            try:
-                val_str = str(val).strip().lower()
-                if val_str.isdigit():
-                    num = int(val_str)
-                    return barangay_map.get(num, np.nan)
-                for num, name in barangay_map.items():
-                    if val_str.startswith(name[:3].lower()):
-                        return name
-                return np.nan
-            except:
-                return np.nan
+    # keep barangays in correct order
+    m_stats['Barangay_clean'] = pd.Categorical(
+        m_stats['Barangay_clean'],
+        categories=list(barangay_map.values()),
+        ordered=True
+    )
+    m_stats = m_stats.sort_values('Barangay_clean')
 
-        df['Barangay_clean'] = df['Barangay'].apply(clean_barangay)
-        df = df.dropna(subset=['Barangay_clean'])
+    # bar chart
+    fig = px.bar(
+        m_stats,
+        x='Barangay_clean',
+        y='probability',
+        title="Flood Probability by Barangay",
+        text='probability'
+    )
+    fig.update_traces(texttemplate='%{text:.2f}', textposition='outside')
+    fig.update_layout(xaxis_title="Barangay", yaxis_title="Flood Probability")
 
-        m_stats = df.groupby('Barangay_clean')['flood_occurred'].agg(['sum', 'count']).reset_index()
-        m_stats['probability'] = (m_stats['sum'] / m_stats['count']).round(3)
+    st.plotly_chart(fig, use_container_width=True)
 
-        m_stats['Barangay_clean'] = pd.Categorical(
-            m_stats['Barangay_clean'],
-            categories=list(barangay_map.values()),
-            ordered=True
-        )
-        m_stats = m_stats.sort_values('Barangay_clean')
-
-        fig = px.bar(
-            m_stats,
-            x='Barangay_clean',
-            y='probability',
-            title="Flood Probability by Barangay",
-            text='probability'
-        )
-        fig.update_traces(texttemplate='%{text:.2f}', textposition='outside')
-        fig.update_layout(xaxis_title="Barangay", yaxis_title="Flood Probability")
-
-        st.plotly_chart(fig, use_container_width=True)
-
-        if show_explanations:
-            st.markdown("""
-            **Explanation:**  
-            This chart shows the chance of flooding per barangay.  
-            - **Probability = Flood occurrences / Total records in that barangay**  
-            Barangays with higher bars indicate higher flood risk levels.  
-            """)
-    else:
-        st.warning("⚠️ The 'Barangay' column was not found in your dataset.")
-
-else:
-    st.info("📂 Please upload a dataset to start the analysis.")
-
+    if show_explanations:
+        st.markdown("""
+        **Explanation:**  
+        This chart shows the chance of flooding per barangay.  
+        - **Probability = Flood occurrences / Total records in that barangay**  
+        Barangays with higher bars indicate higher flood risk levels.  
+        """)
      
 # ------------------------------
 # Clustering Tab (KMeans)
