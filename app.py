@@ -450,11 +450,9 @@ if 'Barangay' in df.columns:
     def clean_barangay(val):
         try:
             val_str = str(val).strip().lower()
-            # numeric (1–12 or '01')
             if val_str.isdigit():
                 num = int(val_str)
                 return barangay_map.get(num, np.nan)
-            # match barangay name (partial or full)
             for num, name in barangay_map.items():
                 if val_str.startswith(name[:3].lower()):
                     return name
@@ -470,10 +468,13 @@ if 'Barangay' in df.columns:
     m_stats = df.groupby('Barangay_clean')['flood_occurred'].agg(['sum', 'count']).reset_index()
     m_stats['probability'] = (m_stats['sum'] / m_stats['count']).round(3)
 
+    # remove San Marcos and San Teodoro
+    m_stats = m_stats[~m_stats['Barangay_clean'].isin(['San Marcos', 'San Teodoro'])]
+
     # keep barangays in correct order
     m_stats['Barangay_clean'] = pd.Categorical(
         m_stats['Barangay_clean'],
-        categories=list(barangay_map.values()),
+        categories=[b for b in barangay_map.values() if b not in ['San Marcos', 'San Teodoro']],
         ordered=True
     )
     m_stats = m_stats.sort_values('Barangay_clean')
@@ -483,7 +484,7 @@ if 'Barangay' in df.columns:
         m_stats,
         x='Barangay_clean',
         y='probability',
-        title="Flood Probability by Barangay",
+        title="Flood Probability by Barangay (excluding San Marcos & San Teodoro)",
         text='probability'
     )
     fig.update_traces(texttemplate='%{text:.2f}', textposition='outside')
@@ -494,10 +495,11 @@ if 'Barangay' in df.columns:
     if show_explanations:
         st.markdown("""
         **Explanation:**  
-        This chart shows the chance of flooding per barangay.  
-        - **Probability = Flood occurrences / Total records in that barangay**  
-        Barangays with higher bars indicate higher flood risk levels.  
+        This chart shows the flood probability of all barangays **excluding San Marcos and San Teodoro**.  
+        - **Probability = Flood occurrences / Total records per barangay**  
+        Higher bars indicate greater flood risk.  
         """)
+
      
 # ------------------------------
 # Clustering Tab (KMeans)
