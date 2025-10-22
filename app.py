@@ -432,7 +432,7 @@ with tabs[1]:
 # ------------------------------
 # Barangay flood probability (fixed)
 # ------------------------------
-if 'Barangay' in df.columns:
+if 'Barangay' in .columns:
     # create flood_occurred column if not exists
     if 'flood_occurred' not in df.columns:
         df['flood_occurred'] = (df['Water Level'].fillna(0) > 0).astype(int)
@@ -443,7 +443,7 @@ if 'Barangay' in df.columns:
     barangay_map = {
         1: 'Bunawan Brook', 2: 'Consuelo', 3: 'Imelda', 4: 'Libertad',
         5: 'Mambalili', 6: 'Nueva Era', 7: 'Poblacion', 8: 'San Andres',
-        9: 'San Marcos', 10: 'San Teodoro'
+        9: 'San Marcos', 10: 'San Teodoro',
     }
 
     # clean and convert barangay formats
