@@ -441,9 +441,9 @@ if 'Barangay' in df.columns:
 
     # barangay mapping
     barangay_map = {
-        1: 'Bunawan Brook', 2: 'Consuelo', 3: 'Imelda', 4: 'Libertad',
+        1: 'Bunawan Brook', 2: 'San Teodoro', 3: 'San Marcos', 4: 'Libertad',
         5: 'Mambalili', 6: 'Nueva Era', 7: 'Poblacion', 8: 'San Andres',
-        9: 'San Marcos', 10: 'San Teodoro',
+        9: 'Imelda', 10: 'Consuelo', 
     }
 
     # clean and convert barangay formats
